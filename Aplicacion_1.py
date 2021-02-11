@@ -1,4 +1,5 @@
 from tkinter import*
+from tkinter import messagebox
 
 class Pantalla(Frame):
     def __init__(self, master):
@@ -23,7 +24,7 @@ class pantalla_inicio(Pantalla):
     def __init__(self, master):
         super().__init__(master)
 
-        # Titulo de la pantalla 
+        # Titulo de la pantalla
         self.lbl_titulo = Label(self, text = "Bienvenido al sistema",font = ("Arial", 30))
         self.lbl_titulo.place(relx = 0.15, rely = 0.1)
 
@@ -41,7 +42,7 @@ class pantalla_inicio(Pantalla):
     def cambio_a_ingreso(self, padre):
         self.destroy()
         login = pantalla_ingreso(padre)
-    
+
     # Funcion para cambiar a la pantalla de inicio de registro
     def cambio_a_registro(self, padre):
         self.destroy()
@@ -74,7 +75,7 @@ class pantalla_ingreso(Pantalla):
         self.btn_ingreso.place(relwidth = 0.5, relx = 0.25, rely = 0.7)
 
 
-        # Boton para ir a pantalla de principal
+        # Boton para ir a pantalla principal
         self.btn_menu = Button(self, text = "Menu principal", font = ("arial",12), command = lambda: self.ir_a_menu(master))
         self.btn_menu.place(relx = 0.1, rely = 0.1)
 
@@ -83,6 +84,46 @@ class pantalla_ingreso(Pantalla):
         self.destroy()
         p_inicio = pantalla_inicio(padre)
 
+    def ingresar(self):
+        # Capturamos datos de las cajas de texto
+        user = self.txt_nombre.get()
+        pwd = self.txt_clave.get()
+
+        try:
+            # Si el archivo existe
+            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","r+")
+            # Realizo alguna operacion
+            # Generar un vector con los datos del archivo txt
+            data = archivo_externo.readlines() # data = ["",""]
+            archivo_externo.close()
+            print(data)
+
+        except:
+            print("No existe el archivo que deseas abrir")
+            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","a+")
+            # Realizo alguna operacion
+            # Generar un vector vacio
+            data = []
+            archivo_externo.close()
+
+        # Bandera que indique si el usuario y la clave son correctos
+        datos_correctos = False
+
+        for registro in data:
+            #registro = "user , 27 , clave\n"
+            [usuario_r, edad_r, clave_r] = registro.split(",")
+            # Quitamos \n de la clave
+            clave_r = clave_r.strip("\n")
+
+            # Verificar si el usuario y la clave son correctos
+            if user == usuario_r and pwd == clave_r:
+                datos_correctos = True
+                break
+
+        if datos_correctos == True:
+            messagebox.showwarning(message = "Bienvenido al sistema", title = "Bienvenida")
+        else:
+            messagebox.showwarning(message = "El usuario o la clave no son correctos", title = "Error")
 
 class pantalla_registro(Pantalla):
     def __init__(self,master):
@@ -110,7 +151,7 @@ class pantalla_registro(Pantalla):
         # Boton para crear nuevo registro
         self.btn_registro = Button(self, text="Crear registro", font = ("Corbel", 14), command = self.registrar)
         self.btn_registro.place(relx = 0.7, rely = 0.6)
-        
+
         # Boton para ir a pantalla de principal
         self.btn_menu = Button(self, text = "Menu principal", font = ("arial",12), command = lambda: self.ir_a_menu(master))
         self.btn_menu.place(relx = 0.1, rely = 0.1)
@@ -134,6 +175,59 @@ class pantalla_registro(Pantalla):
         self.txt_nombre.focus()
         print(nombre_usuario)
 
+        # Revisar si tenemos un archivo externo para guardar nuestros datos
+        #archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","a+")
+        # Realizo alguna operacion
+        #archivo_externo.close()
+
+        #archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","r+")
+        # Realizo alguna operacion
+        #archivo_externo.close()
+
+        # Control de excepciones
+        try:
+            # Si el archivo existe
+            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","r+")
+            # Realizo alguna operacion
+            # Generar un vector con los datos del archivo txt
+            data = archivo_externo.readlines() # data = ["",""]
+            archivo_externo.close()
+            print(data)
+
+        except:
+            print("No existe el archivo que deseas abrir")
+            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","a+")
+            # Realizo alguna operacion
+            # Generar un vector vacio
+            data = []
+            archivo_externo.close()
+
+        # Verificar si el usuario ya existe
+        # Bandera
+        existe_usuario = False
+
+        # Recorrer todos los elementos del arreglo data (la informacion que contiene el archivo txt)
+        #data = ["user,27,clave\n","user1,30,clave1\n","user2,30,clave2\n"]
+
+        for registro in data:
+            #registro = "user , 27 , clave\n"
+            [usuario_r, edad_r, clave_r] = registro.split(",")
+            # Quitamos \n de la clave
+            clave_r = clave_r.strip("\n")
+
+            # Verificar si el usuario a registrar ya existe
+            if nombre_usuario == usuario_r:
+                existe_usuario = True
+                break
+
+
+        # registrar al usuario nuevo(en caso de que el usuario no exista)
+        if existe_usuario == False:
+            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","a+")
+            archivo_externo.write("%s,%s,%s\n" %(nombre_usuario,edad_usuario,clave_usuario))
+            archivo_externo.close()
+        else:
+            messagebox.showwarning(message = "El usuario a registrar ya existe", title = "Alerta")
 
 
 # Creamos la raiz o base de la apliacion

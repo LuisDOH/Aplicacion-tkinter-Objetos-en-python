@@ -76,7 +76,7 @@ class pantalla_ingreso(Pantalla):
         self.txt_clave.place(relx = 0.25, rely = 0.6, relwidth = 0.5)
 
         # Boton para inicio de sesion
-        self.btn_ingreso = Button(self, text = "Login", bg = "#45b39d", fg = "white", font = ("Corbel",17),command = self.ingresar)
+        self.btn_ingreso = Button(self, text = "Login", bg = "#45b39d", fg = "white", font = ("Corbel",17),command = lambda: self.ingresar(master))
         self.btn_ingreso.place(relwidth = 0.5, relx = 0.25, rely = 0.7)
 
 
@@ -90,7 +90,7 @@ class pantalla_ingreso(Pantalla):
         p_inicio = pantalla_inicio(padre)
 
      # Metodo para ingresar con usuario y clave
-    def ingresar(self):
+    def ingresar(self, padre):
         nombre_usuario = self.txt_nombre.get()
         clave_usuario = self.txt_clave.get()
 
@@ -100,36 +100,51 @@ class pantalla_ingreso(Pantalla):
         self.txt_nombre.focus()
         print(nombre_usuario)
 
-        # Comprobamos si el archivo existe
+        # Verificamos si el archivo existe, si no lo creamos
         try:
-            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "r+")
-            data = archivo_externo.readlines()
-            archivo_externo.close()
+            # ---------- Si el archivo existe recatamos la informacion que esta dentro---------
+            data = open(r"/home/lolguin/Desktop/Backend/Python/Aplicacion_modular_V1/Datos","rb")
+            lista_registros = pickle.load(data)
+            data.close()
+
         except:
-            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "w+")
-            archivo_externo.close()
-            print("Se ha creado un nuevo archivo")
-            data = []
+            # --------- Si no exitse entonces creamos un archivo nuevo y dejamos nuestra lista como vacia
+            data = open(r"/home/lolguin/Desktop/Backend/Python/Aplicacion_modular_V1/Datos","wb")
+            data.close()
+            print("==== Se ha creado un nuevo archivo =====")
+            lista_registros = []
 
-        # Creamos una bandera para que nos indique si el usuario que queremos crear es correcto y la clave tambien
+
+        # Crear una bandera que indique si encuentra una coincidencia
         usuario_correcto = False
+        clave_correcta = False
+        for registro in lista_registros:
+            # El dato nombre que viene del formulario y el atributo nombre que esta en los objetos
+            if nombre_usuario == registro.nombre_usuario:
+                if clave_usuario == registro.clave:
+                    usuario_correcto = True
+                    clave_correcta = True
+                    break
+                else:
+                    usuario_correcto = True
+                    clave_correcta = False
+                    break
 
-        for registro in data:
-            [usuario_registrado, _, clave_registrada]  = registro.split(",")
-            clave_registrada =clave_registrada.strip("\n") # Elimina todos los caracteres dentro del parentesis
-            print(clave_registrada)
+        # Verificar cuales banderas estan True para indicar un mensaje
+        if usuario_correcto == True and clave_correcta == True:
+            messagebox.showinfo(message = f"Bienvenido al sistema {nombre_usuario}", title = "Bienvenido")
 
-            # Verificamos si el usuario existe y de ser asi cambiar el valor de la bandera
-            if (nombre_usuario == usuario_registrado and clave_usuario == clave_registrada):
-                usuario_correcto = True
-                break
+            # Ingresamos a nuestra pantalla de bienvenida
+            self.destroy()
+            bienvenida = pantalla_bienvenida(padre)
 
-        if(usuario_correcto == True):
-            messagebox.showwarning(message="Bienvenido a la aplicacion", title="Alerta")
+        elif usuario_correcto == True and clave_correcta == False:
+            messagebox.showwarning(message = "La clave es incorrecta", title = "Alerta")
         else:
-            messagebox.showwarning(message="Usuario o clave incorrectos", title="Alerta")
+            messagebox.showwarning(message = f"El usuario: {nombre_usuario} no esta registrado", title = "Alerta")
 
-
+        # Liberamos el espacio de la lista registros
+        del(lista_registros)
 
 class pantalla_registro(Pantalla):
     def __init__(self,master):
@@ -182,18 +197,17 @@ class pantalla_registro(Pantalla):
 
 
         '''
-            =============================================================================
-            1- Verificacion la existencia de un archivo donde estan guardados los usuarios
-            2- Creamos un objeto de tipo registro con la informacion capturada
-                en el formulario
-            3- Abrimos un enlace para guardar la lista de usuarios actualizada y volcamos
-                la informacion
+        ====================================================================================
+        1- Verificacion la existencia de un archivo donde estan guardados los usuarios
+        2- Creamos un objeto de tipo registro con la informacion capturada
+            en el formulario y lo anexamos a la lista re usuarios
+        3- Abrimos un enlace para guardar la lista de usuarios actualizada y volcamos
+            la informacion
 
-            * Recordar:
-                 wb => write binary;    rb => read binary
-            =============================================================================
+        * Recordar:
+             wb => write binary;    rb => read binary
+        =====================================================================================
         '''
-
         # Verificamos si el archivo existe, si no lo creamos
         try:
             # ---------- Si el archivo existe recatamos la informacion que esta dentro---------
@@ -208,45 +222,68 @@ class pantalla_registro(Pantalla):
             print("==== Se ha creado un nuevo archivo =====")
             lista_registros = []
 
-        # Creamos el registro con la informacion del nuevo usuario
-        registro = Registro(nombre_usuario, edad_usuario, clave_usuario)
-        print(f"Objeto Usuario creado: \nNombre:{registro.nombre_usuario}\nEdad:{registro.edad}\nClave:{registro.clave}")
 
-        # Agregamos el registro a la lista
-        lista_registros.append(registro)
-        print(len(lista_registros))
-
-        # Volcamos la lista actualizada en el archivo binario
-        data  = open(r"/home/lolguin/Desktop/Backend/Python/Aplicacion_modular_V1/Datos","wb")
-        pickle.dump(lista_registros,data)
-        data.close()
-
-
-        # Comprobamos si el archivo existe
-        try:
-            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "r+")
-            data = archivo_externo.readlines()
-            archivo_externo.close()
-        except:
-            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "w+")
-            archivo_externo.close()
-            print("Se ha creado un nuevo archivo")
-            data = []
-
-        # Creamos una bandera para que nos indique si el usuario que queremos crear ya existe
+        # Crear una bandera que indique si encuentra una coincidencia
         existe_usuario = False
-
-        for registro in data:
-            [usuario_registrado, _, _]  = registro.split(",")
-
-            # Verificamos si el usuario existe y de ser asi cambiar el valor de la bandera
-            if (nombre_usuario == usuario_registrado):
+        for registro in lista_registros:
+            # El dato nombre que viene del formulario y el atributo nombre que esta en los objetos
+            if nombre_usuario == registro.nombre_usuario:
                 existe_usuario = True
                 break
 
-        if(existe_usuario == False):
-            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "a+")
-            archivo_externo.write("%s,%s,%s\n" %(nombre_usuario, edad_usuario, clave_usuario))
-            archivo_externo.close()
+        if existe_usuario == True:
+            messagebox.showwarning(message= "Usuario ya existe", title="Alerta")
         else:
-            messagebox.showwarning(message="Usuario ya existe", title="Alerta")
+            # Creamos el registro con la informacion del nuevo usuario
+            registro = Registro(nombre_usuario, edad_usuario, clave_usuario)
+
+            # Agregamos el registro a la lista
+            lista_registros.append(registro)
+            print(len(lista_registros))
+
+
+            # Volcamos la lista actualizada en el archivo binario
+            data  = open(r"/home/lolguin/Desktop/Backend/Python/Aplicacion_modular_V1/Datos","wb")
+            pickle.dump(lista_registros,data)
+            data.close()
+            messagebox.showwarning(message = "Registro exitoso", title = "Aviso")
+
+
+'''
+    ==============================================================================
+        Primer pantalla dentro de la aplicacion que mostrara todos los usuarios
+        registrados en nuestra base de datos
+    ==============================================================================
+'''
+
+class pantalla_bienvenida(Pantalla):
+    def __init__(self, master):
+        super().__init__(master)
+        self.titulo = Label(self, text = "Usuarios Registrados", font = ("Corbel",18),fg = "#45b39d", justify="center")
+        self.titulo.place(relwidth = 0.5, relx = 0.25, rely = 0.1)
+
+        self.lbl_nombre = Label(self, text = "Nombre usuario:", font = ("Corbel",14), fg = "red",justify="center")
+        self.lbl_nombre.place(relwidth = 0.4, relx = 0.1, rely = 0.3)
+
+        self.lbl_edad= Label(self, text = "Edad:", font = ("Corbel",14),  fg = "red", justify="center")
+        self.lbl_edad.place(relwidth = 0.2, relx = 0.5, rely = 0.3)
+
+        self.lbl_clave= Label(self, text = "Clave:", font = ("Corbel",14), fg = "red", justify="center")
+        self.lbl_clave.place(relwidth = 0.2, relx = 0.8, rely = 0.3)
+
+        data = open(r"/home/lolguin/Desktop/Backend/Python/Aplicacion_modular_V1/Datos","rb")
+        lista_registros = pickle.load(data)
+        data.close()
+
+        iter = 0.1
+        for registro in lista_registros:
+            label = Label(self, text = f"{registro.nombre_usuario}", font = ("Corbel",12), justify="center")
+            label.place(relwidth = 0.4, relx = 0.1, rely =(0.3 + iter))
+
+            label = Label(self, text = f"{registro.edad}", font = ("Corbel",12), justify="center")
+            label.place(relwidth = 0.2, relx = 0.5, rely = (0.3 + iter))
+
+            label = Label(self, text = f"{registro.clave}", font = ("Corbel",12), justify="center")
+            label.place(relwidth = 0.2, relx = 0.8, rely = (0.3 + iter))
+
+            iter += 0.1

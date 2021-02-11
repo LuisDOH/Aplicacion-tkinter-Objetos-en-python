@@ -1,5 +1,14 @@
+'''
+    ================================================
+        Este modulo contiene todas las clases
+        para la interfaz visual del programa
+    =================================================
+'''
 from tkinter import*
 from tkinter import messagebox
+
+from modulo_clases_logicas import*
+import pickle
 
 class Pantalla(Frame):
     def __init__(self, master):
@@ -17,8 +26,6 @@ class Pantalla(Frame):
     # Metodo de la super clase para cerrar
     def cerrar_aplicacion(self, padre):
         padre.destroy()
-
-
 
 class pantalla_inicio(Pantalla):
     def __init__(self, master):
@@ -48,8 +55,6 @@ class pantalla_inicio(Pantalla):
         self.destroy()
         registro = pantalla_registro(padre)
 
-
-
 class pantalla_ingreso(Pantalla):
     def __init__(self, master):
         super().__init__(master)
@@ -71,11 +76,11 @@ class pantalla_ingreso(Pantalla):
         self.txt_clave.place(relx = 0.25, rely = 0.6, relwidth = 0.5)
 
         # Boton para inicio de sesion
-        self.btn_ingreso = Button(self, text = "Login", bg = "#45b39d", fg = "white", font = ("Corbel",17))
+        self.btn_ingreso = Button(self, text = "Login", bg = "#45b39d", fg = "white", font = ("Corbel",17),command = self.ingresar)
         self.btn_ingreso.place(relwidth = 0.5, relx = 0.25, rely = 0.7)
 
 
-        # Boton para ir a pantalla principal
+        # Boton para ir a pantalla de principal
         self.btn_menu = Button(self, text = "Menu principal", font = ("arial",12), command = lambda: self.ir_a_menu(master))
         self.btn_menu.place(relx = 0.1, rely = 0.1)
 
@@ -84,46 +89,47 @@ class pantalla_ingreso(Pantalla):
         self.destroy()
         p_inicio = pantalla_inicio(padre)
 
+     # Metodo para ingresar con usuario y clave
     def ingresar(self):
-        # Capturamos datos de las cajas de texto
-        user = self.txt_nombre.get()
-        pwd = self.txt_clave.get()
+        nombre_usuario = self.txt_nombre.get()
+        clave_usuario = self.txt_clave.get()
 
+        self.txt_nombre.delete(0,END)
+        self.txt_clave.delete(0,END)
+
+        self.txt_nombre.focus()
+        print(nombre_usuario)
+
+        # Comprobamos si el archivo existe
         try:
-            # Si el archivo existe
-            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","r+")
-            # Realizo alguna operacion
-            # Generar un vector con los datos del archivo txt
-            data = archivo_externo.readlines() # data = ["",""]
+            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "r+")
+            data = archivo_externo.readlines()
             archivo_externo.close()
-            print(data)
-
         except:
-            print("No existe el archivo que deseas abrir")
-            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","a+")
-            # Realizo alguna operacion
-            # Generar un vector vacio
-            data = []
+            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "w+")
             archivo_externo.close()
+            print("Se ha creado un nuevo archivo")
+            data = []
 
-        # Bandera que indique si el usuario y la clave son correctos
-        datos_correctos = False
+        # Creamos una bandera para que nos indique si el usuario que queremos crear es correcto y la clave tambien
+        usuario_correcto = False
 
         for registro in data:
-            #registro = "user , 27 , clave\n"
-            [usuario_r, edad_r, clave_r] = registro.split(",")
-            # Quitamos \n de la clave
-            clave_r = clave_r.strip("\n")
+            [usuario_registrado, _, clave_registrada]  = registro.split(",")
+            clave_registrada =clave_registrada.strip("\n") # Elimina todos los caracteres dentro del parentesis
+            print(clave_registrada)
 
-            # Verificar si el usuario y la clave son correctos
-            if user == usuario_r and pwd == clave_r:
-                datos_correctos = True
+            # Verificamos si el usuario existe y de ser asi cambiar el valor de la bandera
+            if (nombre_usuario == usuario_registrado and clave_usuario == clave_registrada):
+                usuario_correcto = True
                 break
 
-        if datos_correctos == True:
-            messagebox.showwarning(message = "Bienvenido al sistema", title = "Bienvenida")
+        if(usuario_correcto == True):
+            messagebox.showwarning(message="Bienvenido a la aplicacion", title="Alerta")
         else:
-            messagebox.showwarning(message = "El usuario o la clave no son correctos", title = "Error")
+            messagebox.showwarning(message="Usuario o clave incorrectos", title="Alerta")
+
+
 
 class pantalla_registro(Pantalla):
     def __init__(self,master):
@@ -173,68 +179,74 @@ class pantalla_registro(Pantalla):
         self.txt_clave.delete(0,END)
 
         self.txt_nombre.focus()
-        print(nombre_usuario)
 
-        # Revisar si tenemos un archivo externo para guardar nuestros datos
-        #archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","a+")
-        # Realizo alguna operacion
-        #archivo_externo.close()
 
-        #archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","r+")
-        # Realizo alguna operacion
-        #archivo_externo.close()
+        '''
+            =============================================================================
+            1- Verificacion la existencia de un archivo donde estan guardados los usuarios
+            2- Creamos un objeto de tipo registro con la informacion capturada
+                en el formulario
+            3- Abrimos un enlace para guardar la lista de usuarios actualizada y volcamos
+                la informacion
 
-        # Control de excepciones
+            * Recordar:
+                 wb => write binary;    rb => read binary
+            =============================================================================
+        '''
+
+        # Verificamos si el archivo existe, si no lo creamos
         try:
-            # Si el archivo existe
-            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","r+")
-            # Realizo alguna operacion
-            # Generar un vector con los datos del archivo txt
-            data = archivo_externo.readlines() # data = ["",""]
-            archivo_externo.close()
-            print(data)
+            # ---------- Si el archivo existe recatamos la informacion que esta dentro---------
+            data = open(r"/home/lolguin/Desktop/Backend/Python/Aplicacion_modular_V1/Datos","rb")
+            lista_registros = pickle.load(data)
+            data.close()
 
         except:
-            print("No existe el archivo que deseas abrir")
-            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","a+")
-            # Realizo alguna operacion
-            # Generar un vector vacio
-            data = []
-            archivo_externo.close()
+            # --------- Si no exitse entonces creamos un archivo nuevo y dejamos nuestra lista como vacia
+            data = open(r"/home/lolguin/Desktop/Backend/Python/Aplicacion_modular_V1/Datos","wb")
+            data.close()
+            print("==== Se ha creado un nuevo archivo =====")
+            lista_registros = []
 
-        # Verificar si el usuario ya existe
-        # Bandera
+        # Creamos el registro con la informacion del nuevo usuario
+        registro = Registro(nombre_usuario, edad_usuario, clave_usuario)
+        print(f"Objeto Usuario creado: \nNombre:{registro.nombre_usuario}\nEdad:{registro.edad}\nClave:{registro.clave}")
+
+        # Agregamos el registro a la lista
+        lista_registros.append(registro)
+        print(len(lista_registros))
+
+        # Volcamos la lista actualizada en el archivo binario
+        data  = open(r"/home/lolguin/Desktop/Backend/Python/Aplicacion_modular_V1/Datos","wb")
+        pickle.dump(lista_registros,data)
+        data.close()
+
+
+        # Comprobamos si el archivo existe
+        try:
+            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "r+")
+            data = archivo_externo.readlines()
+            archivo_externo.close()
+        except:
+            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "w+")
+            archivo_externo.close()
+            print("Se ha creado un nuevo archivo")
+            data = []
+
+        # Creamos una bandera para que nos indique si el usuario que queremos crear ya existe
         existe_usuario = False
 
-        # Recorrer todos los elementos del arreglo data (la informacion que contiene el archivo txt)
-        #data = ["user,27,clave\n","user1,30,clave1\n","user2,30,clave2\n"]
-
         for registro in data:
-            #registro = "user , 27 , clave\n"
-            [usuario_r, edad_r, clave_r] = registro.split(",")
-            # Quitamos \n de la clave
-            clave_r = clave_r.strip("\n")
+            [usuario_registrado, _, _]  = registro.split(",")
 
-            # Verificar si el usuario a registrar ya existe
-            if nombre_usuario == usuario_r:
+            # Verificamos si el usuario existe y de ser asi cambiar el valor de la bandera
+            if (nombre_usuario == usuario_registrado):
                 existe_usuario = True
                 break
 
-
-        # registrar al usuario nuevo(en caso de que el usuario no exista)
-        if existe_usuario == False:
-            archivo_externo = open(r"/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_1/registros.txt","a+")
-            archivo_externo.write("%s,%s,%s\n" %(nombre_usuario,edad_usuario,clave_usuario))
+        if(existe_usuario == False):
+            archivo_externo = open("/home/lolguin/Desktop/Backend/Pre/Tkinter/AplicacionV_2/usuarios.txt", "a+")
+            archivo_externo.write("%s,%s,%s\n" %(nombre_usuario, edad_usuario, clave_usuario))
             archivo_externo.close()
         else:
-            messagebox.showwarning(message = "El usuario a registrar ya existe", title = "Alerta")
-
-
-# Creamos la raiz o base de la apliacion
-root = Tk()
-root.title("Primera Aplicacion")
-root.geometry("600x800")
-
-# Instancia de la clase pantalla para crear la pantalla de inicio de mi aplicacion
-aplicacion = pantalla_inicio(root)
-aplicacion.mainloop()
+            messagebox.showwarning(message="Usuario ya existe", title="Alerta")
